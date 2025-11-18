@@ -2,13 +2,6 @@
   "$schema": "https://json.schemastore.org/nest-cli",
   "collection": "@nestjs/schematics",
   "sourceRoot": "apps/ecom-microservice/src",
-  "compilerOptions": {
-    "deleteOutDir": true,
-    "webpack": true,
-    "tsConfigPath": "apps/ecom-microservice/tsconfig.app.json"
-  },
-  "monorepo": true,
-  "root": "apps/ecom-microservice",
   "projects": {
     "auth": {
       "type": "application",
@@ -17,15 +10,6 @@
       "sourceRoot": "apps/auth/src",
       "compilerOptions": {
         "tsConfigPath": "apps/auth/tsconfig.app.json"
-      }
-    },
-    "ecom-microservice": {
-      "type": "application",
-      "root": "apps/ecom-microservice",
-      "entryFile": "main",
-      "sourceRoot": "apps/ecom-microservice/src",
-      "compilerOptions": {
-        "tsConfigPath": "apps/ecom-microservice/tsconfig.app.json"
       }
     },
     "common": {
@@ -72,6 +56,22 @@
       "compilerOptions": {
         "tsConfigPath": "apps/users/tsconfig.app.json"
       }
+    },
+    "ecom-microservice": {
+      "type": "application",
+      "root": "apps/ecom-microservice",
+      "entryFile": "main",
+      "sourceRoot": "apps/ecom-microservice/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/ecom-microservice/tsconfig.app.json"
+      }
     }
-  }
+  },
+  "compilerOptions": {
+    "deleteOutDir": true,
+    "webpack": true,
+    "tsConfigPath": "apps/ecom-microservice/tsconfig.app.json"
+  },
+  "monorepo": true,
+  "root": "apps/ecom-microservice"
 }
