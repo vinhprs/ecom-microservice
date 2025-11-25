@@ -21,6 +21,15 @@
         "tsConfigPath": "libs/common/tsconfig.lib.json"
       }
     },
+    "ecom-microservice": {
+      "type": "application",
+      "root": "apps/ecom-microservice",
+      "entryFile": "main",
+      "sourceRoot": "apps/ecom-microservice/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/ecom-microservice/tsconfig.app.json"
+      }
+    },
     "notifications": {
       "type": "application",
       "root": "apps/notifications",
@@ -56,19 +65,9 @@
       "compilerOptions": {
         "tsConfigPath": "apps/users/tsconfig.app.json"
       }
-    },
-    "ecom-microservice": {
-      "type": "application",
-      "root": "apps/ecom-microservice",
-      "entryFile": "main",
-      "sourceRoot": "apps/ecom-microservice/src",
-      "compilerOptions": {
-        "tsConfigPath": "apps/ecom-microservice/tsconfig.app.json"
-      }
     }
   },
   "compilerOptions": {
-    "deleteOutDir": true,
     "webpack": true,
     "tsConfigPath": "apps/ecom-microservice/tsconfig.app.json"
   },

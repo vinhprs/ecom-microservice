@@ -23,4 +23,4 @@ RUN npm install --only=production
 
 COPY --from=development /usr/src/app/dist ./dist
 
-CMD ["node", "dist/apps/ecom-microservice/main"]
+CMD ["node", "dist/apps/users/main"]

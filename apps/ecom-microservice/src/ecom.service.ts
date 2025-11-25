@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
-export class NotificationsService {
+export class EcomService {
   getHello(): string {
-    return 'Notifications Service is running';
+    return 'Hello World!';
   }
 }

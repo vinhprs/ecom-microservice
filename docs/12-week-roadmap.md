@@ -53,15 +53,15 @@ Client → AWS ALB → Kong API Gateway → Microservices
 
 **Kong Gateway Setup:**
 
-- [ ] Add Kong to docker-compose.yml
-  - [ ] Kong database (PostgreSQL)
-  - [ ] Kong migrations
-  - [ ] Kong gateway container
+- [x] Add Kong to docker-compose.yml
+  - [x] Kong database (PostgreSQL)
+  - [x] Kong migrations
+  - [x] Kong gateway container
   - [ ] Konga UI (optional)
-- [ ] Start Kong infrastructure
-- [ ] Verify Kong Admin API (http://localhost:8001)
-- [ ] Verify Kong Proxy (http://localhost:8000)
-- [ ] Configure basic Kong settings
+- [x] Start Kong infrastructure
+- [x] Verify Kong Admin API (http://localhost:8001)
+- [x] Verify Kong Proxy (http://localhost:8000)
+- [x] Configure basic Kong settings
 
 **Day 3-4: Auth Service (Simplified - No JWT Guards)** 🆕
 
