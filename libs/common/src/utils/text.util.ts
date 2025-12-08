@@ -16,8 +16,8 @@ export function toSnakeCase(obj: unknown): unknown {
       (result: Record<string, unknown>, key: string) => {
         // Only convert to snake_case if the key contains uppercase characters
         const hasUpperCase = /[A-Z]/.test(key);
-        const convertedKey = hasUpperCase ? (snakeCase(key) as string) : key;
-        result[convertedKey] = toSnakeCase(obj[key]);
+        const convertedKey = hasUpperCase ? snakeCase(key) : key;
+        result[convertedKey] = toSnakeCase(obj[key as keyof typeof obj]);
         return result;
       },
       {},

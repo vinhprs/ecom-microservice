@@ -1,0 +1,16 @@
+# Prisma
+generated/
+*.db
+*.db-journal
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# Dependencies
+node_modules/

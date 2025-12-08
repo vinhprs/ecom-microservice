@@ -1,8 +1,24 @@
-import { Module } from '@nestjs/common';
+import { Module, Provider } from '@nestjs/common';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
 import { ConfigModule } from '@nestjs/config';
 import { LoggerModule } from '@app/common';
+import {
+  PRISMA_SERVICE,
+  SHARDING_SERVICE,
+  USERS_SERVICE,
+} from '../users.di-token';
+import { PrismaService } from './database/prisma.service';
+import { ShardingService } from './database/sharding.service';
+
+const providers: Provider[] = [
+  {
+    provide: USERS_SERVICE,
+    useClass: UsersService,
+  },
+  { provide: PRISMA_SERVICE, useClass: PrismaService },
+  { provide: SHARDING_SERVICE, useClass: ShardingService },
+];
 
 @Module({
   imports: [
@@ -13,6 +29,7 @@ import { LoggerModule } from '@app/common';
     LoggerModule,
   ],
   controllers: [UsersController],
-  providers: [UsersService],
+  providers,
+  exports: providers,
 })
 export class UsersModule {}

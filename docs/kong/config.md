@@ -149,3 +149,5 @@ curl -s -X POST http://localhost:8001/plugins \
 curl --location 'http://localhost:8001/plugins' \
 --header 'Content-Type: application/x-www-form-urlencoded' \
 --data-urlencode 'name=prometheus'
+
+# 10. Jwt Plugin
