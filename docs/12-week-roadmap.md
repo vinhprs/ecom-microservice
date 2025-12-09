@@ -80,8 +80,8 @@ Auth Service responsibilities:
 
 **Implementation:**
 
-- [ ] Create Auth Service app
-- [ ] Implement user registration
+- [x] Create Auth Service app
+- [x] Implement user registration
 
   ```typescript
   // Simplified - no guards!
@@ -94,7 +94,7 @@ Auth Service responsibilities:
   }
   ```
 
-- [ ] Implement JWT token generation
+- [x] Implement JWT token generation
 
   ```typescript
   async login(loginDto: LoginDto) {
@@ -105,10 +105,10 @@ Auth Service responsibilities:
   }
   ```
 
-- [ ] Implement refresh token mechanism
-- [ ] Create DTOs and entities
+- [x] Implement refresh token mechanism
+- [x] Create DTOs and entities
 - [ ] Write unit tests (no guard testing needed!)
-- [ ] Configure Kong route for Auth Service
+- [x] Configure Kong route for Auth Service
 
   ```bash
   # Auth routes are PUBLIC (no JWT required)
@@ -121,7 +121,8 @@ Auth Service responsibilities:
     --data name=auth-route
   ```
 
-- [ ] Test through Kong proxy
+- [x] Test through Kong proxy
+
   ```bash
   # Register through Kong
   curl -X POST http://localhost:8000/api/v1/auth/register \
@@ -131,7 +132,7 @@ Auth Service responsibilities:
 
 **Day 5: Kong JWT Configuration** 🆕
 
-- [ ] Enable JWT plugin globally
+- [x] Enable JWT plugin globally
 
   ```bash
   curl -X POST http://localhost:8001/plugins \
@@ -140,7 +141,7 @@ Auth Service responsibilities:
     --data config.claims_to_verify=exp
   ```
 
-- [ ] Configure Kong consumer
+- [x] Configure Kong consumer
 
   ```bash
   curl -X POST http://localhost:8001/consumers \
@@ -162,7 +163,7 @@ Auth Service responsibilities:
     --data config.add.headers[2]='X-User-Email:$(X-Consumer-Username)'
   ```
 
-- [ ] Test JWT flow
+- [x] Test JWT flow
 
   ```bash
   # Login to get token
@@ -178,8 +179,8 @@ Auth Service responsibilities:
 
 **Day 6-7: Database Setup**
 
-- [ ] Create docker-compose.yml (include Kong + Databases)
-- [ ] Setup 4 PostgreSQL shards
+- [x] Create docker-compose.yml (include Kong + Databases)
+- [x] Setup 4 PostgreSQL shards
 - [ ] Create base tables (users, products, orders)
 - [ ] Write migration scripts
 - [ ] Test connections to all shards
@@ -229,8 +230,8 @@ export const GatewayUser = createParamDecorator(
 
 **Implement Users Service:**
 
-- [ ] Create Users Service app
-- [ ] Implement CRUD operations with sharding
+- [x] Create Users Service app
+- [x] Implement CRUD operations with sharding
 
   ```typescript
   @Controller('users')
@@ -501,6 +502,7 @@ export const GatewayUser = createParamDecorator(
   - [ ] Connection pooling to upstream services
   - [ ] DNS caching
   - [ ] Worker processes tuning
+
 - [ ] Add Kong caching plugin (optional)
 
   ```bash
@@ -1322,8 +1324,8 @@ kubectl logs -f deployment/orders-service -n production
 
 ---
 
-**Status:** Week 1 Day 3-4 COMPLETED ✅  
-**Current Phase:** Week 1 Day 5 (Kong JWT Configuration)  
+**Status:** Week 1 Day 3-4 COMPLETED ✅
+**Current Phase:** Week 1 Day 5 (Kong JWT Configuration)
 **Architecture:** Kong API Gateway + Microservices (Production-Ready!)
 
 **Keep going! You're building something impressive!** 💪🚀
