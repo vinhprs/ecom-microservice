@@ -1,14 +1,5 @@
-import { JwtPayload } from '@app/common';
-import {
-  Body,
-  Controller,
-  Get,
-  Headers,
-  Inject,
-  Post,
-  Put,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { GatewayUser, GatewayUserPayload } from '@app/common';
+import { Body, Controller, Get, Inject, Post, Put } from '@nestjs/common';
 import { USERS_SERVICE } from '../users.di-token';
 import { CreateUserProfileDto, UpdateUserProfileDto } from './dto';
 import { IUsersService } from './interface/users.interface';
@@ -25,30 +16,16 @@ export class UsersController {
     return this.usersService.createProfile(createDto);
   }
 
-  /**
-   * Get my profile
-   * PROTECTED by Kong - X-User-Id header added by Kong after JWT validation
-   */
   @Get('me')
-  async getMyProfile(@JwtPayload('sub') userId: string) {
-    if (!userId) {
-      throw new UnauthorizedException('User ID not found in headers');
-    }
-    return this.usersService.getProfile(userId);
+  async getMyProfile(@GatewayUser() user: GatewayUserPayload) {
+    return this.usersService.getProfile(user.id);
   }
 
-  /**
-   * Update my profile
-   * PROTECTED by Kong
-   */
   @Put('me')
   async updateMyProfile(
-    @JwtPayload('sub') userId: string,
+    @GatewayUser() user: GatewayUserPayload,
     @Body() dto: UpdateUserProfileDto,
   ) {
-    if (!userId) {
-      throw new UnauthorizedException('User ID not found in headers');
-    }
-    return this.usersService.updateProfile(userId, dto);
+    return this.usersService.updateProfile(user.id, dto);
   }
 }

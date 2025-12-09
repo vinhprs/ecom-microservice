@@ -151,3 +151,42 @@ curl --location 'http://localhost:8001/plugins' \
 --data-urlencode 'name=prometheus'
 
 # 10. Jwt Plugin
+
+1. Create Consumer
+
+curl -X POST http://localhost:8001/consumers \
+ -H "Content-Type: application/json" \
+ -d '{"username": "ecommerce-app"}'
+
+2. Add JWT Credentials (CRITICAL: Match Auth Service secret!)
+
+curl -X POST http://localhost:8001/consumers/ecommerce-app/jwt \
+ -H "Content-Type: application/json" \
+ -d '{
+"key": "ecommerce-auth-service",
+"secret": "your-super-secret-jwt-key-change-this-in-production",
+"algorithm": "HS256"
+}'
+
+3. Enable JWT Plugin Globally
+
+curl -X POST http://localhost:8001/plugins \
+ -H "Content-Type: application/json" \
+ -d '{
+"name": "jwt",
+"config": {
+"claims_to_verify": ["exp"],
+"key_claim_name": "iss"
+}
+}'
+
+4. Create anonymous consumer (Auth service)
+
+curl -X POST http://localhost:8001/consumers \
+ -H "Content-Type: application/json" \
+ -d '{
+"username": "anonymous"
+}'
+
+5. Jwt to header plugin
+   https://github.com/yesinteractive/kong-jwt2header

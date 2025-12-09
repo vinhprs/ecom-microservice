@@ -57,6 +57,10 @@ services:
       KONG_ADMIN_GUI_LISTEN: 0.0.0.0:8002, 0.0.0.0:8445 ssl
       KONG_ADMIN_GUI_URL: http://${GW_HOST:-localhost}:8002
       KONG_PASSWORD: kongpass
+      #Plugin
+      KONG_PLUGINS: bundled,kong-jwt2header
+    volumes:
+      - kong-plugins:/usr/local/share/lua/5.1/kong/plugins
     depends_on:
       kong-migrations:
         condition: service_completed_successfully
@@ -295,6 +299,8 @@ networks:
 
 volumes:
   kong-db-data:
+    driver: local
+  kong-plugins:
     driver: local
   auth-db-data:
     driver: local

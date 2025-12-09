@@ -22,6 +22,7 @@ import {
 import { IAuthRepository, IAuthService } from './interface/auth.interface';
 import { firstValueFrom } from 'rxjs';
 import { HttpService } from '@nestjs/axios';
+import { JwtPayload } from '@app/common';
 
 @Injectable()
 export class AuthService implements IAuthService {
@@ -143,12 +144,11 @@ export class AuthService implements IAuthService {
    * Generate access and refresh tokens
    */
   async generateTokens(userId: string, email: string): Promise<TokenOuputDto> {
-    const payload = {
-      sub: userId, // User ID (will become X-User-Id)
-      email: email, // Email (will become X-User-Email)
+    const payload: JwtPayload = {
+      sub: userId,
+      email: email,
       iss: 'ecommerce-auth-service',
       iat: Math.floor(Date.now() / 1000),
-      // exp: Math.floor(Date.now() / 1000) + 15 * 60, // 15 minutes
     };
 
     const [accessToken, refreshToken] = await Promise.all([

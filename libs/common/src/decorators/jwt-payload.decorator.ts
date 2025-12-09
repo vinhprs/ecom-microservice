@@ -3,9 +3,10 @@ import {
   ExecutionContext,
   UnauthorizedException,
 } from '@nestjs/common';
+import { JwtPayload } from '../interfaces';
 
-export const JwtPayload = createParamDecorator(
-  (data: string | undefined, ctx: ExecutionContext) => {
+export const ReqUser = createParamDecorator(
+  (data: string | undefined, ctx: ExecutionContext): JwtPayload => {
     const request = ctx.switchToHttp().getRequest();
     const authHeader = request.headers.authorization;
 
