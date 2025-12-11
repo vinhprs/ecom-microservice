@@ -1,9 +1,16 @@
-import { compareHash, hashing } from '@app/common';
+import {
+  JwtPayload,
+  RABBITMQ_EXCHANGES,
+  RABBITMQ_USERS_ROUTING_KEYS,
+  compareHash,
+  hashing,
+} from '@app/common';
+import { AuthUserRegisterEvent } from '@app/common/events/auth.event';
+import { RabbitMQService } from '@app/common/rabbitmq/rabbitmq.service';
 import {
   ConflictException,
   Inject,
   Injectable,
-  InternalServerErrorException,
   Logger,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -20,9 +27,6 @@ import {
   TokenOuputDto,
 } from './dto';
 import { IAuthRepository, IAuthService } from './interface/auth.interface';
-import { firstValueFrom } from 'rxjs';
-import { HttpService } from '@nestjs/axios';
-import { JwtPayload } from '@app/common';
 
 @Injectable()
 export class AuthService implements IAuthService {
@@ -31,7 +35,7 @@ export class AuthService implements IAuthService {
     @Inject(AUTH_REPOSITORY) private readonly authRepository: IAuthRepository,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
-    private readonly httpService: HttpService,
+    private readonly usersClient: RabbitMQService,
   ) {}
 
   async register(registerDto: RegisterDto): Promise<AuthOutputDto> {
@@ -49,24 +53,22 @@ export class AuthService implements IAuthService {
 
     // RPC
     try {
-      const usersServiceUrl = this.configService.get('USERS_SERVICE_URL');
-      this.logger.log(
-        `Creating user profile in users service: ${usersServiceUrl}`,
-      );
-      await firstValueFrom(
-        this.httpService.post(`${usersServiceUrl}/api/v1/users/profiles`, {
-          id: user.id,
+      const event = AuthUserRegisterEvent.create(
+        {
+          userId: user.id,
           email: user.email,
-          fullName: fullName || null,
-        }),
+          fullName: user.fullName,
+        },
+        user.id,
+      );
+
+      this.usersClient.publishEvent(
+        RABBITMQ_EXCHANGES.USER_EVENTS,
+        RABBITMQ_USERS_ROUTING_KEYS.REGISTERED,
+        event.plainObject(),
       );
     } catch (error) {
-      this.logger.error(`Failed to create user profile: ${error}`);
-      await this.authRepository.deleteOne(user.id);
-
-      throw new InternalServerErrorException(
-        'Failed to create user profile. Registration rolled back.',
-      );
+      this.logger.error(`Failed to publish user registration event: ${error}`);
     }
 
     const tokens = await this.generateTokens(user.id, user.email);

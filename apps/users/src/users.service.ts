@@ -14,7 +14,7 @@ export class UsersService implements IUsersService {
     @Inject(SHARDING_SERVICE) private readonly shardingService: ShardingService,
   ) {}
 
-  createProfile(dto: CreateUserProfileDto) {
+  async createProfile(dto: CreateUserProfileDto) {
     const { id, email, fullName } = dto;
 
     // Determine which shard to use
@@ -23,7 +23,7 @@ export class UsersService implements IUsersService {
 
     this.logger.log(`Creating user profile in shard ${shardId}`);
 
-    const profile = shard.userProfile.create({
+    const profile = await shard.userProfile.create({
       data: {
         id,
         email,
