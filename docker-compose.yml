@@ -293,6 +293,25 @@ services:
     volumes:
       - .:/usr/src/app
 
+  # ==========================================
+  # AUTH REGISTER QUEUE
+  # ==========================================
+  rabbitmq:
+    image: rabbitmq:4.1-management-alpine
+    container_name: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - ecommerce-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5672/health"]
+
 networks:
   ecommerce-network:
     driver: bridge
@@ -311,4 +330,6 @@ volumes:
   shard3_data:
     driver: local
   shard4_data:
+    driver: local
+  rabbitmq_data:
     driver: local

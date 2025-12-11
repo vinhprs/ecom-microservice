@@ -1,12 +1,17 @@
+import {
+  RABBITMQ_EXCHANGES,
+  RabbitMQClientModule,
+  USERS_SERVICE,
+} from '@app/common';
+import { LoggerModule } from '@app/common/logger/logger.module';
+import { HttpModule } from '@nestjs/axios';
 import { Module, Provider } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { JwtModule } from '@nestjs/jwt';
+import { AUTH_REPOSITORY, AUTH_SERVICE } from '../auth.di-token';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { LoggerModule } from '@app/common/logger/logger.module';
-import { AUTH_REPOSITORY, AUTH_SERVICE } from '../auth.di-token';
 import { AuthRepository } from './database/auth.repository';
-import { JwtModule } from '@nestjs/jwt';
-import { HttpModule } from '@nestjs/axios';
 
 const providers: Provider[] = [
   {
@@ -37,6 +42,12 @@ const providers: Provider[] = [
       }),
     }),
     HttpModule,
+    RabbitMQClientModule.register([
+      {
+        name: USERS_SERVICE,
+        exchange: RABBITMQ_EXCHANGES.USER_EVENTS,
+      },
+    ]),
   ],
   controllers: [AuthController],
   providers,
