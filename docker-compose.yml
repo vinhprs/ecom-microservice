@@ -174,6 +174,85 @@ services:
       retries: 5
 
   # ==========================================
+  # USERS SHARDING DATABASE
+  # ==========================================
+  product-db-master:
+    image: postgres:16.3-alpine3.20
+    container_name: product-db-master
+    user: postgres
+    environment:
+      POSTGRES_DB: product_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_HOST_AUTH_METHOD: "scram-sha-256\nhost replication all 0.0.0.0/0 md5"
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"
+    command: |
+      postgres
+        -c wal_level=replica
+        -c hot_standby=on
+        -c max_wal_senders=10
+        -c max_replication_slots=10
+
+    ports:
+      - "5438:5432"
+    networks:
+      - ecommerce-network
+    volumes:
+      - ./scripts/replication/init-replication-user.sql:/docker-entrypoint-initdb.d/init-replication-user.sql
+
+  product-db-slave1:
+    image: postgres:16.3-alpine3.20
+    container_name: product-db-slave1
+    user: postgres
+    environment:
+      PGUSER: replicator
+      PGPASSWORD: replicator_password
+      PGDATABASE: product_db
+    command: |
+      bash -c "
+      until pg_basebackup --pgdata=/var/lib/postgresql/data -R --slot=replication_slot1 --host=product-db-master --port=5432
+      do
+      echo 'Waiting for primary to connect...'
+      sleep 1s
+      done
+      echo 'Backup done, starting replica...'
+      chmod 0700 /var/lib/postgresql/data
+      postgres
+      "
+    ports:
+      - "5439:5432"
+    networks:
+      - ecommerce-network
+    depends_on:
+      - product-db-master
+
+  product-db-slave2:
+    image: postgres:16.3-alpine3.20
+    container_name: product-db-slave2
+    user: postgres
+    environment:
+      PGUSER: replicator
+      PGPASSWORD: replicator_password
+      PGDATABASE: product_db
+    command: |
+      bash -c "
+      until pg_basebackup --pgdata=/var/lib/postgresql/data -R --slot=replication_slot2 --host=product-db-master --port=5432
+      do
+      echo 'Waiting for primary to connect...'
+      sleep 1s
+      done
+      echo 'Backup done, starting replica...'
+      chmod 0700 /var/lib/postgresql/data
+      postgres
+      "
+    ports:
+      - "5440:5432"
+    networks:
+      - ecommerce-network
+    depends_on:
+      - product-db-master
+
+  # ==========================================
   # BACKEND MICROSERVICES
   # ==========================================
   ecommerce-microservices:
@@ -330,6 +409,12 @@ volumes:
   shard3_data:
     driver: local
   shard4_data:
+    driver: local
+  product-db-master-data:
+    driver: local
+  product-db-replica-data:
+    driver: local
+  product-db-slave2-data:
     driver: local
   rabbitmq_data:
     driver: local
