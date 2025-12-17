@@ -186,6 +186,13 @@ services:
         -c hot_standby=on
         -c max_wal_senders=10
         -c max_replication_slots=10
+        -c log_statement=all
+        -c log_connections=on
+        -c log_disconnections=on
+        -c log_duration=on
+        -c log_line_prefix='%t [%p] [MASTER] user=%u,db=%d,app=%a,client=%h '
+        -c log_min_duration_statement=0
+        -c logging_collector=off
     ports:
       - "5438:5432"
     networks:
@@ -212,6 +219,16 @@ services:
       REPLICATION_PASSWORD: replicator_password
       REPLICATION_SLOT: replication_slot1
       PGDATA: /var/lib/postgresql/data
+    command: |
+      postgres
+        -c hot_standby=on
+        -c log_statement=all
+        -c log_connections=on
+        -c log_disconnections=on
+        -c log_duration=on
+        -c log_line_prefix='%t [%p] [SLAVE1] user=%u,db=%d,app=%a,client=%h '
+        -c log_min_duration_statement=0
+        -c logging_collector=off
     ports:
       - "5439:5432"
     networks:
@@ -236,6 +253,16 @@ services:
       REPLICATION_PASSWORD: replicator_password
       REPLICATION_SLOT: replication_slot2
       PGDATA: /var/lib/postgresql/data
+    command: |
+      postgres
+        -c hot_standby=on
+        -c log_statement=all
+        -c log_connections=on
+        -c log_disconnections=on
+        -c log_duration=on
+        -c log_line_prefix='%t [%p] [SLAVE2] user=%u,db=%d,app=%a,client=%h '
+        -c log_min_duration_statement=0
+        -c logging_collector=off
     ports:
       - "5440:5432"
     networks:

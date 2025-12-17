@@ -1,5 +1,5 @@
 import { PaginationParamsDto } from '@app/common';
-import { Expose } from 'class-transformer';
+import { Expose, Transform } from 'class-transformer';
 import {
   IsBoolean,
   IsDate,
@@ -73,6 +73,7 @@ export class ProductOutputDto {
   @Expose()
   description: string;
 
+  @Transform(({ value }) => (value?.toNumber ? value.toNumber() : value))
   @Expose()
   price: number;
 
@@ -82,12 +83,13 @@ export class ProductOutputDto {
   @Expose()
   isFlashSale: boolean;
 
+  @Transform(({ value }) => (value?.toNumber ? value.toNumber() : value))
   @Expose()
-  flashSalePrice: number;
+  flashSalePrice?: number;
 
   @Expose()
-  flashSaleStart: Date;
+  flashSaleStart?: Date;
 
   @Expose()
-  flashSaleEnd: Date;
+  flashSaleEnd?: Date;
 }

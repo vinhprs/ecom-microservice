@@ -7,8 +7,8 @@ import {
   ProductOutputDto,
   ProductUpdateDto,
 } from '../dto';
-import { Product } from '@prisma/products-client';
-import { PrismaClient } from '@prisma/products-client';
+import { Product, Prisma } from '@prisma/products-client';
+// import { PrismaClient } from '@prisma/products-client';
 import { v7 as uuidv7 } from 'uuid';
 import { BasePaginationResponse } from '@app/common';
 import { plainToInstance } from 'class-transformer';
@@ -16,7 +16,7 @@ import { PRODUCTS_PRISMA_SERVICE } from '../products.di-token';
 
 @Injectable()
 export class ProductsRepository implements IProductsRepository {
-  private prisma: PrismaClient;
+  private prisma: any;
   constructor(
     @Inject(PRODUCTS_PRISMA_SERVICE)
     private readonly prismaService: PrismaService,
@@ -50,22 +50,32 @@ export class ProductsRepository implements IProductsRepository {
   async findByCond(
     cond: ProductCondDto,
   ): Promise<BasePaginationResponse<ProductOutputDto>> {
-    const { page, limit } = cond;
+    const { page, limit, name } = cond;
+
+    const filter: Prisma.ProductWhereInput = {};
     const skip = (page - 1) * limit;
+
+    if (name) {
+      filter.name = { contains: name };
+    }
 
     const [products, total] = await Promise.all([
       this.prisma.product.findMany({
-        where: cond,
+        where: filter,
         skip,
         take: limit,
       }),
-      this.prisma.product.count({ where: cond }),
+      this.prisma.product.count({ where: filter }),
     ]);
 
-    const productsOutput = plainToInstance(ProductOutputDto, products);
+    products.map((product: Product) => {
+      return plainToInstance(ProductOutputDto, product, {
+        enableImplicitConversion: true,
+      });
+    });
 
     return {
-      data: productsOutput,
+      data: products,
       total,
       totalPages: Math.ceil(total / limit),
     };

@@ -7,20 +7,21 @@ import { PrismaClient } from '@prisma/products-client';
 @Injectable()
 export class PrismaService implements OnModuleInit, OnModuleDestroy {
   private readonly totalReplicas = 2;
-  private readonly replicaUrls: string[] = [];
+  private readonly replicaClients: PrismaClient[] = [];
 
-  private prisma: PrismaClient;
+  private primaryClient: PrismaClient;
+  private extendedClient: ReturnType<typeof this.createExtendedClient>;
 
   constructor(private readonly configService: ConfigService) {
-    this.createExtendedClient();
+    this.extendedClient = this.createExtendedClient();
   }
 
   async onModuleInit() {
-    await this.prisma.$connect();
+    await this.primaryClient.$connect();
   }
 
   async onModuleDestroy() {
-    await this.prisma.$disconnect();
+    await this.primaryClient.$disconnect();
   }
 
   private createExtendedClient() {
@@ -30,25 +31,39 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
       ),
     });
 
-    console.log('adapter :>> ', adapter);
-
-    this.prisma = new PrismaClient({ adapter });
+    this.primaryClient = new PrismaClient({
+      adapter,
+    });
 
     for (let i = 1; i <= this.totalReplicas; i++) {
       const databaseUrl = this.configService.get(
         `PRODUCTS_SLAVE_${i}_DATABASE_URL`,
       );
-      this.replicaUrls.push(databaseUrl);
+
+      console.log('databaseUrl :>> ', databaseUrl);
+
+      const replicaAdapter = new PrismaPg({
+        connectionString: databaseUrl,
+      });
+
+      const replicaClient = new PrismaClient({
+        adapter: replicaAdapter,
+      });
+      this.replicaClients.push(replicaClient);
     }
 
-    this.prisma.$extends(
+    return this.primaryClient.$extends(
       readReplicas({
-        replicas: this.replicaUrls,
+        replicas: this.replicaClients,
       }),
     );
   }
 
   get instance() {
-    return this.prisma;
+    return this.extendedClient;
+  }
+
+  get primaryInstance() {
+    return this.primaryClient;
   }
 }
