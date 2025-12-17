@@ -5,6 +5,7 @@ import {
   OnModuleInit,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '@prisma/users-client';
 
 @Injectable()
@@ -22,12 +23,9 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
     for (let i = 1; i <= this.totalShards; i++) {
       const databaseUrl = this.configService.get(`USERS_SHARD_${i}_URL`);
 
+      const adapter = new PrismaPg({ connectionString: databaseUrl });
       const prismaClient = new PrismaClient({
-        datasources: {
-          db: {
-            url: databaseUrl,
-          },
-        },
+        adapter,
       });
 
       this.shards.set(i - 1, prismaClient);

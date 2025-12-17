@@ -3,12 +3,19 @@ import { PrismaClient, User } from '@prisma/auth-client';
 import { v7 as uuidv7 } from 'uuid';
 import { AuthCondDto, AuthUserUpdateDto, RegisterDto } from '../dto';
 import { IAuthRepository } from '../interface/auth.interface';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthRepository implements IAuthRepository {
+  private adapter: PrismaPg;
+
   private prisma: PrismaClient;
-  constructor() {
-    this.prisma = new PrismaClient();
+  constructor(private readonly configService: ConfigService) {
+    this.adapter = new PrismaPg({
+      connectionString: this.configService.get<string>('AUTH_DATABASE_URL'),
+    });
+    this.prisma = new PrismaClient({ adapter: this.adapter });
   }
 
   async findById(id: string): Promise<User | null> {

@@ -29,7 +29,8 @@
     "@nestjs/microservices": "^11.1.9",
     "@nestjs/platform-express": "^11.0.1",
     "@prisma/adapter-pg": "^7.0.0",
-    "@prisma/client": "^5.22.0",
+    "@prisma/client": "^7.1.0",
+    "@prisma/extension-read-replicas": "^0.5.0",
     "amqp-connection-manager": "^5.0.0",
     "amqplib": "^0.10.9",
     "axios": "^1.13.2",
@@ -39,7 +40,7 @@
     "nestjs-pino": "^4.4.1",
     "pg": "^8.16.3",
     "pino-pretty": "^13.1.2",
-    "prisma": "^5.22.0",
+    "prisma": "^7.1.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
     "uuid": "^11.0.3"

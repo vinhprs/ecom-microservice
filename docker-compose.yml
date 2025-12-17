@@ -61,6 +61,7 @@ services:
       KONG_PLUGINS: bundled,kong-jwt2header
     volumes:
       - kong-plugins:/usr/local/share/lua/5.1/kong/plugins
+      - ./scripts/kong-jwt2header:/usr/local/share/lua/5.1/kong/plugins/kong-jwt2header
     depends_on:
       kong-migrations:
         condition: service_completed_successfully
@@ -88,11 +89,6 @@ services:
       - ecommerce-network
     volumes:
       - auth-db-data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD", "pg_isready", "-U", "auth"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   # ==========================================
   # USERS SHARDING DATABASE
@@ -179,78 +175,77 @@ services:
   product-db-master:
     image: postgres:16.3-alpine3.20
     container_name: product-db-master
-    user: postgres
     environment:
       POSTGRES_DB: product_db
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_HOST_AUTH_METHOD: "scram-sha-256\nhost replication all 0.0.0.0/0 md5"
-      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"
+      PGDATA: /var/lib/postgresql/data
     command: |
       postgres
         -c wal_level=replica
         -c hot_standby=on
         -c max_wal_senders=10
         -c max_replication_slots=10
-
     ports:
       - "5438:5432"
     networks:
       - ecommerce-network
     volumes:
-      - ./scripts/replication/init-replication-user.sql:/docker-entrypoint-initdb.d/init-replication-user.sql
+      - ./scripts/replication/setup-master.sh:/docker-entrypoint-initdb.d/setup-master.sh
+      - product-db-master-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   product-db-slave1:
     image: postgres:16.3-alpine3.20
     container_name: product-db-slave1
-    user: postgres
     environment:
-      PGUSER: replicator
-      PGPASSWORD: replicator_password
-      PGDATABASE: product_db
-    command: |
-      bash -c "
-      until pg_basebackup --pgdata=/var/lib/postgresql/data -R --slot=replication_slot1 --host=product-db-master --port=5432
-      do
-      echo 'Waiting for primary to connect...'
-      sleep 1s
-      done
-      echo 'Backup done, starting replica...'
-      chmod 0700 /var/lib/postgresql/data
-      postgres
-      "
+      POSTGRES_DB: product_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      MASTER_HOST: product-db-master
+      MASTER_PORT: 5432
+      REPLICATION_USER: replicator
+      REPLICATION_PASSWORD: replicator_password
+      REPLICATION_SLOT: replication_slot1
+      PGDATA: /var/lib/postgresql/data
     ports:
       - "5439:5432"
     networks:
       - ecommerce-network
     depends_on:
-      - product-db-master
+      product-db-master:
+        condition: service_healthy
+    volumes:
+      - product-db-slave1-data:/var/lib/postgresql/data
+      - ./scripts/replication/setup-slave.sh:/docker-entrypoint-initdb.d/setup-slave.sh:ro
 
   product-db-slave2:
     image: postgres:16.3-alpine3.20
     container_name: product-db-slave2
-    user: postgres
     environment:
-      PGUSER: replicator
-      PGPASSWORD: replicator_password
-      PGDATABASE: product_db
-    command: |
-      bash -c "
-      until pg_basebackup --pgdata=/var/lib/postgresql/data -R --slot=replication_slot2 --host=product-db-master --port=5432
-      do
-      echo 'Waiting for primary to connect...'
-      sleep 1s
-      done
-      echo 'Backup done, starting replica...'
-      chmod 0700 /var/lib/postgresql/data
-      postgres
-      "
+      POSTGRES_DB: product_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      MASTER_HOST: product-db-master
+      MASTER_PORT: 5432
+      REPLICATION_USER: replicator
+      REPLICATION_PASSWORD: replicator_password
+      REPLICATION_SLOT: replication_slot2
+      PGDATA: /var/lib/postgresql/data
     ports:
       - "5440:5432"
     networks:
       - ecommerce-network
     depends_on:
-      - product-db-master
+      product-db-master:
+        condition: service_healthy
+    volumes:
+      - product-db-slave2-data:/var/lib/postgresql/data
+      - ./scripts/replication/setup-slave.sh:/docker-entrypoint-initdb.d/setup-slave.sh:ro
 
   # ==========================================
   # BACKEND MICROSERVICES
@@ -290,9 +285,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    depends_on:
-      auth-database:
-        condition: service_healthy
     volumes:
       - .:/usr/src/app
 
@@ -412,7 +404,7 @@ volumes:
     driver: local
   product-db-master-data:
     driver: local
-  product-db-replica-data:
+  product-db-slave1-data:
     driver: local
   product-db-slave2-data:
     driver: local

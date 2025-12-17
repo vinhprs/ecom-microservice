@@ -1,0 +1,58 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-arm64-openssl-3.0.x"]
+  output = "../../../node_modules/@prisma/products-client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Product {
+  id              String    @id @db.VarChar(36)
+  name            String
+  description     String?
+  price           Decimal   @db.Decimal(10, 2)
+  inventory       Int       @default(0)
+  isFlashSale     Boolean   @default(false) @map("is_flash_sale")
+  flashSalePrice  Decimal?  @db.Decimal(10, 2) @map("flash_sale_price")
+  flashSaleStart  DateTime? @map("flash_sale_start")
+  flashSaleEnd    DateTime? @map("flash_sale_end")
+  categoryId      String?   @map("category_id")
+  imageUrl        String?   @map("image_url")
+  sku             String?   @unique
+  viewCount       Int       @default(0) @map("view_count")
+  purchaseCount   Int       @default(0) @map("purchase_count")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+
+  @@index([name])
+  @@index([categoryId])
+  @@index([isFlashSale, flashSaleStart, flashSaleEnd])
+  @@index([price])
+  @@index([inventory])
+  @@index([purchaseCount])
+  @@index([createdAt])
+  @@map("products")
+}
+
+model Category {
+  id          String    @id @default(uuid())
+  name        String
+  slug        String    @unique
+  description String?
+  parentId    String?   @map("parent_id")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@index([slug])
+  @@index([parentId])
+  @@map("categories")
+}
