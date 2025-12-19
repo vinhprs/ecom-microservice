@@ -8,7 +8,6 @@ import {
   ProductUpdateDto,
 } from '../dto';
 import { Product, Prisma } from '@prisma/products-client';
-// import { PrismaClient } from '@prisma/products-client';
 import { v7 as uuidv7 } from 'uuid';
 import { BasePaginationResponse } from '@app/common';
 import { plainToInstance } from 'class-transformer';

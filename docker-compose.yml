@@ -170,7 +170,66 @@ services:
       retries: 5
 
   # ==========================================
-  # USERS SHARDING DATABASE
+  # CATEGORIES DATABASE
+  # ==========================================
+  category-db-master:
+    image: postgres:16.3-alpine3.20
+    container_name: category-db-master
+    environment:
+      POSTGRES_DB: category_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      PGDATA: /var/lib/postgresql/data
+      REPLICATION_USER: replicator
+      REPLICATION_PASSWORD: replicator_password
+    command: |
+      postgres
+        -c wal_level=replica
+        -c hot_standby=on
+        -c max_wal_senders=10
+        -c max_replication_slots=10
+    ports:
+      - "5441:5432"
+    networks:
+      - ecommerce-network
+    volumes:
+      - ./scripts/replication/setup-master.sh:/docker-entrypoint-initdb.d/setup-master.sh
+      - category-db-master-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  category-db-slave:
+    image: postgres:16.3-alpine3.20
+    container_name: category-db-slave
+    environment:
+      POSTGRES_DB: category_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      MASTER_HOST: category-db-master
+      MASTER_PORT: 5432
+      REPLICATION_USER: replicator
+      REPLICATION_PASSWORD: replicator_password
+      REPLICATION_SLOT: replication_slot1
+      PGDATA: /var/lib/postgresql/data
+    command: |
+      postgres
+        -c hot_standby=on
+    ports:
+      - "5442:5432"
+    networks:
+      - ecommerce-network
+    depends_on:
+      category-db-master:
+        condition: service_healthy
+    volumes:
+      - ./scripts/replication/setup-slave.sh:/docker-entrypoint-initdb.d/setup-slave.sh:ro
+      - category-db-slave-data:/var/lib/postgresql/data
+
+  # ==========================================
+  # PRODUCTS DATABASE
   # ==========================================
   product-db-master:
     image: postgres:16.3-alpine3.20
@@ -180,6 +239,8 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       PGDATA: /var/lib/postgresql/data
+      REPLICATION_USER: replicator
+      REPLICATION_PASSWORD: replicator_password
     command: |
       postgres
         -c wal_level=replica
@@ -334,6 +395,25 @@ services:
     volumes:
       - .:/usr/src/app
 
+  categories-service:
+    build:
+      context: .
+      dockerfile: apps/categories/Dockerfile
+    command: npm run start:dev categories
+    env_file:
+      - ./apps/categories/.env
+    ports:
+      - "3006:3006"
+    networks:
+      - ecommerce-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3006/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - .:/usr/src/app
+
   products-service:
     build:
       context: .
@@ -428,6 +508,10 @@ volumes:
   shard3_data:
     driver: local
   shard4_data:
+    driver: local
+  category-db-master-data:
+    driver: local
+  category-db-slave-data:
     driver: local
   product-db-master-data:
     driver: local

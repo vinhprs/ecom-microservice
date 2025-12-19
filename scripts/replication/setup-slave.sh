@@ -11,7 +11,12 @@ until PGPASSWORD=postgres pg_isready -h $MASTER_HOST -p $MASTER_PORT -U postgres
   sleep 2
 done
 
-
+# Stop PostgreSQL if running
+if pg_ctl status > /dev/null 2>&1; then
+  echo "🛑 Stopping PostgreSQL..."
+  pg_ctl stop -m fast || true
+  sleep 2
+fi
 
 # Remove old data directory
 rm -rf $PGDATA/*

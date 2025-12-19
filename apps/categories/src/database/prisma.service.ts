@@ -1,14 +1,11 @@
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaPg } from '@prisma/adapter-pg';
+import { PrismaClient } from '@prisma/categories-client';
 import { readReplicas } from '@prisma/extension-read-replicas';
-import { PrismaClient } from '@prisma/products-client';
 
 @Injectable()
 export class PrismaService implements OnModuleInit, OnModuleDestroy {
-  private readonly totalReplicas = 2;
-  private readonly replicaClients: PrismaClient[] = [];
-
   private primaryClient: PrismaClient;
   private extendedClient: ReturnType<typeof this.createExtendedClient>;
 
@@ -27,7 +24,7 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
   private createExtendedClient() {
     const adapter = new PrismaPg({
       connectionString: this.configService.get<string>(
-        'PRODUCTS_MASTER_DATABASE_URL',
+        'CATEGORIES_MASTER_DATABASE_URL',
       ),
     });
 
@@ -35,24 +32,21 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
       adapter,
     });
 
-    for (let i = 1; i <= this.totalReplicas; i++) {
-      const databaseUrl = this.configService.get(
-        `PRODUCTS_SLAVE_${i}_DATABASE_URL`,
-      );
+    const databaseUrl = this.configService.get<string>(
+      'CATEGORIES_SLAVE_DATABASE_URL',
+    );
 
-      const replicaAdapter = new PrismaPg({
-        connectionString: databaseUrl,
-      });
+    const replicaAdapter = new PrismaPg({
+      connectionString: databaseUrl,
+    });
 
-      const replicaClient = new PrismaClient({
-        adapter: replicaAdapter,
-      });
-      this.replicaClients.push(replicaClient);
-    }
+    const replicaClient = new PrismaClient({
+      adapter: replicaAdapter,
+    });
 
     return this.primaryClient.$extends(
       readReplicas({
-        replicas: this.replicaClients,
+        replicas: [replicaClient],
       }),
     );
   }
