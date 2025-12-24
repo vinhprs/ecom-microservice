@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaClient, User } from '@prisma/auth-client';
+import { PrismaClient, User } from '../../prisma/generated/auth-client';
 import { v7 as uuidv7 } from 'uuid';
 import { AuthCondDto, AuthUserUpdateDto, RegisterDto } from '../dto';
 import { IAuthRepository } from '../interface/auth.interface';

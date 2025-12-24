@@ -6,3 +6,4 @@ export * from './events';
 export * from './rabbitmq';
 export * from './constants';
 export * from './dto';
+export * from './grpc';

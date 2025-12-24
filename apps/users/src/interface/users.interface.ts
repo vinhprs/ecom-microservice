@@ -1,4 +1,4 @@
-import { UserProfile, Address } from '@prisma/users-client';
+import { UserProfile, Address } from '../../prisma/generated/users-client';
 import {
   CreateUserProfileDto,
   UpdateUserProfileDto,

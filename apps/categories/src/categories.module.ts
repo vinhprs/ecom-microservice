@@ -10,6 +10,7 @@ import {
 import { PrismaService } from './database/prisma.service';
 import { ConfigModule } from '@nestjs/config';
 import { LoggerModule } from '@app/common';
+import { CategoriesGrpcController } from './categories-grpc.controller';
 
 const providers: Provider[] = [
   {
@@ -33,7 +34,7 @@ const providers: Provider[] = [
     }),
     LoggerModule,
   ],
-  controllers: [CategoriesController],
+  controllers: [CategoriesController, CategoriesGrpcController],
   providers,
 })
 export class CategoriesModule {}

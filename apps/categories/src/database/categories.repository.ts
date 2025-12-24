@@ -8,7 +8,7 @@ import {
   CategoryUpdateDto,
 } from '../dto';
 import { CATEGORIES_PRISMA_SERVICE } from '../categories.di-token';
-import { Prisma, PrismaClient } from '@prisma/categories-client';
+import { Prisma, PrismaClient } from '../../prisma/generated/categories-client';
 import { v7 as uuidv7 } from 'uuid';
 import { plainToInstance } from 'class-transformer';
 import { BasePaginationResponse } from '@app/common';
