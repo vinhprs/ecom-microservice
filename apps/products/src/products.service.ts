@@ -22,12 +22,14 @@ import {
 } from './interfaces/products.interface';
 import { PRODUCTS_REPOSITORY } from './products.di-token';
 import { ClientGrpc } from '@nestjs/microservices';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, timeout, catchError, of } from 'rxjs';
 import { plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class ProductsService implements IProductsService, OnModuleInit {
   private categoryGrpc: ICategoryGrpc;
+  private readonly GRPC_TIMEOUT = 5000;
+
   constructor(
     @Inject(PRODUCTS_REPOSITORY)
     private readonly productsRepository: IProductsRepository,
@@ -38,6 +40,48 @@ export class ProductsService implements IProductsService, OnModuleInit {
   onModuleInit() {
     this.categoryGrpc =
       this.categoryClient.getService<ICategoryGrpc>('CategoryService');
+  }
+
+  private async fetchCategoryWithFallback(
+    categoryId: string,
+  ): Promise<CategoryResponse | null> {
+    try {
+      return await firstValueFrom(
+        this.categoryGrpc.getCategory({ id: categoryId }).pipe(
+          timeout(this.GRPC_TIMEOUT),
+          catchError(() => {
+            return of(null);
+          }),
+        ),
+      );
+    } catch {
+      return null;
+    }
+  }
+
+  private async fetchCategoriesBatchWithFallback(
+    categoryIds: string[],
+  ): Promise<Map<string, CategoryResponse>> {
+    if (categoryIds.length === 0) {
+      return new Map();
+    }
+
+    try {
+      const response = await firstValueFrom(
+        this.categoryGrpc.getCategoriesBatch({ ids: categoryIds }).pipe(
+          timeout(this.GRPC_TIMEOUT),
+          catchError(() => {
+            return of({ categories: [] });
+          }),
+        ),
+      );
+
+      return new Map(
+        response.categories.map((cat: CategoryResponse) => [cat.id, cat]),
+      );
+    } catch {
+      return new Map();
+    }
   }
 
   async create(dto: ProductCreateDto) {
@@ -52,14 +96,12 @@ export class ProductsService implements IProductsService, OnModuleInit {
     const product = await this.productsRepository.findById(id);
 
     if (!product) {
-      throw new NotFoundException('Category not found');
+      throw new NotFoundException('Product not found');
     }
 
-    const category = await firstValueFrom(
-      this.categoryGrpc.getCategory({
-        id: product.categoryId!,
-      }),
-    );
+    const category = product.categoryId
+      ? await this.fetchCategoryWithFallback(product.categoryId)
+      : null;
 
     return plainToInstance(
       ProductOutputDto,
@@ -76,22 +118,9 @@ export class ProductsService implements IProductsService, OnModuleInit {
   async findByCond(cond: ProductCondDto) {
     const product = await this.productsRepository.findByCond(cond);
 
-    // Fetch category if product has one
-    let category = null;
-    if (product.categoryId) {
-      try {
-        category = await firstValueFrom(
-          this.categoryGrpc.getCategory({
-            id: product.categoryId,
-          }),
-        );
-      } catch (error) {
-        console.warn(
-          `Category ${product.categoryId} not found for product`,
-          error,
-        );
-      }
-    }
+    const category = product.categoryId
+      ? await this.fetchCategoryWithFallback(product.categoryId)
+      : null;
 
     return plainToInstance(
       ProductOutputDto,
@@ -116,7 +145,6 @@ export class ProductsService implements IProductsService, OnModuleInit {
   async findByIds(ids: string[]) {
     const products = await this.productsRepository.findByIds(ids);
 
-    // Get unique category IDs
     const categoryIds = [
       ...new Set(
         products
@@ -125,22 +153,9 @@ export class ProductsService implements IProductsService, OnModuleInit {
       ),
     ];
 
-    // Fetch categories in batch if there are any
-    let categoriesMap = new Map<string, CategoryResponse>();
-    if (categoryIds.length > 0) {
-      try {
-        const { categories } = await firstValueFrom(
-          this.categoryGrpc.getCategoriesBatch({ ids: categoryIds }),
-        );
-        categoriesMap = new Map(
-          categories.map((cat: CategoryResponse) => [cat.id, cat]),
-        );
-      } catch (error) {
-        console.warn('Failed to fetch categories', error);
-      }
-    }
+    const categoriesMap =
+      await this.fetchCategoriesBatchWithFallback(categoryIds);
 
-    // Map products with their categories
     const productsWithCategories = products.map((product) => ({
       ...product,
       category: product.categoryId
@@ -162,7 +177,6 @@ export class ProductsService implements IProductsService, OnModuleInit {
       totalPages,
     } = await this.productsRepository.list(cond);
 
-    // Get unique category IDs
     const categoryIds = [
       ...new Set(
         products
@@ -171,22 +185,9 @@ export class ProductsService implements IProductsService, OnModuleInit {
       ),
     ];
 
-    // Fetch categories in batch if there are any
-    let categoriesMap = new Map<string, CategoryResponse>();
-    if (categoryIds.length > 0) {
-      try {
-        const { categories } = await firstValueFrom(
-          this.categoryGrpc.getCategoriesBatch({ ids: categoryIds }),
-        );
-        categoriesMap = new Map(
-          categories.map((cat: CategoryResponse) => [cat.id, cat]),
-        );
-      } catch (error) {
-        console.warn('Failed to fetch categories', error);
-      }
-    }
+    const categoriesMap =
+      await this.fetchCategoriesBatchWithFallback(categoryIds);
 
-    // Map products with their categories
     const productsWithCategories = products.map((product) => ({
       ...product,
       category: product.categoryId
