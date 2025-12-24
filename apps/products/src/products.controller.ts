@@ -25,13 +25,13 @@ export class ProductsController {
   }
 
   @Get(':id')
-  findById(@Param('id') id: string) {
+  getProduct(@Param('id') id: string) {
     return this.productsService.findById(id);
   }
 
   @Get()
-  findByCond(@Query() cond: ProductCondDto) {
-    return this.productsService.findByCond(cond);
+  list(@Query() cond: ProductCondDto) {
+    return this.productsService.list(cond);
   }
 
   @Patch(':id')

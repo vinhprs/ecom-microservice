@@ -1,4 +1,4 @@
-import { PaginationParamsDto } from '@app/common';
+import { CategoryResponse, PaginationParamsDto } from '@app/common';
 import { Expose, Transform } from 'class-transformer';
 import {
   IsBoolean,
@@ -73,7 +73,10 @@ export class ProductOutputDto {
   @Expose()
   description: string;
 
-  @Transform(({ value }) => (value?.toNumber ? value.toNumber() : value))
+  @Transform(({ value }) => {
+    if (value === null || value === undefined) return value;
+    return value?.toNumber ? value.toNumber() : value;
+  })
   @Expose()
   price: number;
 
@@ -83,7 +86,10 @@ export class ProductOutputDto {
   @Expose()
   isFlashSale: boolean;
 
-  @Transform(({ value }) => (value?.toNumber ? value.toNumber() : value))
+  @Transform(({ value }) => {
+    if (value === null || value === undefined) return null;
+    return value?.toNumber ? value.toNumber() : value;
+  })
   @Expose()
   flashSalePrice?: number;
 
@@ -92,4 +98,8 @@ export class ProductOutputDto {
 
   @Expose()
   flashSaleEnd?: Date;
+
+  @Expose()
+  @IsOptional()
+  category?: CategoryResponse;
 }

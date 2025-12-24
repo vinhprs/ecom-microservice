@@ -1,15 +1,17 @@
-import { Module, Provider } from '@nestjs/common';
-import { ProductsController } from './products.controller';
-import { ProductsService } from './products.service';
-import { ConfigModule } from '@nestjs/config';
+import { CategoryGrpcClientOptions } from '@app/common';
 import { LoggerModule } from '@app/common/logger/logger.module';
+import { Module, Provider } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { ClientsModule } from '@nestjs/microservices';
+import { PrismaService } from './database/prisma.service';
+import { ProductsRepository } from './database/products.repository';
+import { ProductsController } from './products.controller';
 import {
   PRODUCTS_PRISMA_SERVICE,
   PRODUCTS_REPOSITORY,
   PRODUCTS_SERVICE,
 } from './products.di-token';
-import { ProductsRepository } from './database/products.repository';
-import { PrismaService } from './database/prisma.service';
+import { ProductsService } from './products.service';
 
 const providers: Provider[] = [
   {
@@ -33,6 +35,7 @@ const providers: Provider[] = [
       envFilePath: '/apps/products/.env',
     }),
     LoggerModule,
+    ClientsModule.register(CategoryGrpcClientOptions),
   ],
   controllers: [ProductsController],
   providers,
