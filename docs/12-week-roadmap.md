@@ -181,11 +181,11 @@ Auth Service responsibilities:
 
 - [x] Create docker-compose.yml (include Kong + Databases)
 - [x] Setup 4 PostgreSQL shards
-- [ ] Create base tables (users, products, orders)
+- [x] Create base tables (users, products, orders)
 - [ ] Write migration scripts
-- [ ] Test connections to all shards
-- [ ] Implement ShardingService
-- [ ] Test shard distribution
+- [x] Test connections to all shards
+- [x] Implement ShardingService
+- [x] Test shard distribution
 
 **Deliverables:**
 
@@ -254,9 +254,9 @@ export const GatewayUser = createParamDecorator(
   }
   ```
 
-- [ ] Implement read/write splitting
+- [x] Implement read/write splitting
 - [ ] Add caching layer (Redis)
-- [ ] Configure Kong route
+- [x] Configure Kong route
 
   ```bash
   curl -X POST http://localhost:8001/services \
@@ -273,8 +273,8 @@ export const GatewayUser = createParamDecorator(
 
 **Day 3-4: Products Service** 🆕
 
-- [ ] Create Products Service app
-- [ ] Implement product catalog
+- [x] Create Products Service app
+- [x] Implement product catalog
 
   ```typescript
   @Controller('products')
